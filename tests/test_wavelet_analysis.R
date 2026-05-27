@@ -27,8 +27,12 @@ if (!requireNamespace("terra", quietly = TRUE)) {
   quit(save = "no", status = 0)
 }
 
-test_raster <- create_test_raster(ncol = 3, nrow = 2, nlyr = 60, seed = 42)
-predictability_raster <- terra::app(test_raster, fun = calc_predictability)
+test_raster <- create_test_raster(ncol = 180, nrow = 90, nlyr = 60, seed = 42)
+predictability_raster <- terra::app(
+  test_raster,
+  fun = calc_predictability,
+  cores = 6
+)
 
 stopifnot(
   terra::nlyr(predictability_raster) == 1L,
