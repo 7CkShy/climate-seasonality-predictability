@@ -10,6 +10,10 @@ calculate_seasonal <- function(
   base.entropy = 2,
   indices.only = FALSE
 ) {
+  if (!demo && any(is.na(x))) {
+    return(NA)
+  }
+
   if (demo) {
     set.seed(6789)
     df <- tibble::tibble(
