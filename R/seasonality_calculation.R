@@ -1,4 +1,4 @@
-caculate_seasonal <- function(
+calculate_seasonal <- function(
   x,
   start_year = 1990,
   end_year = 2020,
