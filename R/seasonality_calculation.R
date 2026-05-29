@@ -57,5 +57,5 @@ calculate_seasonal <- function(
   C <- round(1 - HY / log(10, base = base.binning), 2)
   M <- round((HX + HY - HXY) / log(10, base = base.binning), 2)
 
-  return(M)
+  return(P)
 }
