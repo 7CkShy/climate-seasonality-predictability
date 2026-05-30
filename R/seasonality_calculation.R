@@ -2,6 +2,7 @@ calculate_seasonal <- function(
   x,
   start_year = 1990,
   end_year = 2020,
+  output_type = "P",
   demo = FALSE,
   s = 10,
   base.binning = 2,
@@ -10,6 +11,9 @@ calculate_seasonal <- function(
   base.entropy = 2,
   indices.only = FALSE
 ) {
+  output_type <- match.arg(output_type, c("P", "C", "M"))
+  fn <- match.fun("mean")
+
   if (!demo && any(is.na(x))) {
     return(NA)
   }
@@ -22,10 +26,25 @@ calculate_seasonal <- function(
       "Q" = runif(372, 0, 1)
     )
   } else {
-    n_year <- length(x) / 12
+    years <- seq.int(start_year, end_year)
+    expected_n <- length(years) * 12
+
+    if (length(x) != expected_n) {
+      stop(
+        "Input length does not match start_year/end_year: got ",
+        length(x),
+        " monthly values, expected ",
+        expected_n,
+        " for ",
+        length(years),
+        " years.",
+        call. = FALSE
+      )
+    }
+
     df <- tibble::tibble(
-      "year" = as.integer(rep(start_year:end_year, each = 12)),
-      "month" = as.integer(rep(1:12, n_year)),
+      "year" = as.integer(rep(years, each = 12)),
+      "month" = as.integer(rep(1:12, length(years))),
       "Q" = x
     )
   }
@@ -33,7 +52,7 @@ calculate_seasonal <- function(
   df$year <- as.factor(df$year)
   df$month <- as.factor(df$month)
 
-  df.monthly <- aggregate(Q ~ month + year, df, "mean", na.rm = TRUE)
+  df.monthly <- aggregate(Q ~ month + year, df, fn, na.rm = TRUE)
 
   df.monthly$Q <- log10(df.monthly$Q + 1)
   df.monthly$class <- cut(
@@ -53,9 +72,15 @@ calculate_seasonal <- function(
   HXY <- -1 *
     sum((df.table / Z) * log(df.table / Z, base = base.entropy), na.rm = TRUE)
 
-  P <- round(1 - (HXY - HX) / log(10, base = base.binning), 2)
-  C <- round(1 - HY / log(10, base = base.binning), 2)
-  M <- round((HX + HY - HXY) / log(10, base = base.binning), 2)
+  P <- round(1 - (HXY - HX) / log(s, base = base.binning), 2)
+  C <- round(1 - HY / log(s, base = base.binning), 2)
+  M <- round((HX + HY - HXY) / log(s, base = base.binning), 2)
 
-  return(P)
+  if (output_type == "P") {
+    return(P)
+  } else if (output_type == "M") {
+    return(M)
+  } else {
+    return(C)
+  }
 }
