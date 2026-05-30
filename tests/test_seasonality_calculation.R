@@ -8,10 +8,20 @@ test_raster <- create_test_raster(
   seed = 42
 ) +
   2
-seasonal_raster <- terra::app(
+seasonal_raster_m <- terra::app(
   test_raster,
   fun = calculate_seasonal,
   start_year = 1,
   end_year = 6,
+  output_type = "M",
+  cores = 4
+)
+
+seasonal_raster_c <- terra::app(
+  test_raster,
+  fun = calculate_seasonal,
+  start_year = 1,
+  end_year = 6,
+  output_type = "C",
   cores = 4
 )
