@@ -73,16 +73,44 @@ crop_qilian_pre <- function(year) {
 invisible(lapply(years, crop_qilian_pre))
 
 # 计算季节性 ----------------------------------------------------------------------
-tif_file <- list.files("./data/qilian_pre_1901_1920/", full.names = TRUE)
+tif_file <- file.path(out_root, sprintf("pre_%d_qilian.tif", years))
+missing_tif <- tif_file[!file.exists(tif_file)]
+if (length(missing_tif) > 0) {
+  stop("Missing cropped tif files: ", paste(missing_tif, collapse = ", "))
+}
 
-sea_r <- app(
-  rast(tif_file),
+pre_stack <- rast(tif_file)
+expected_layers <- length(years) * 12
+if (nlyr(pre_stack) != expected_layers) {
+  stop(
+    "Unexpected monthly layer count: got ",
+    nlyr(pre_stack),
+    ", expected ",
+    expected_layers,
+    "."
+  )
+}
+
+C <- app(
+  pre_stack,
   calculate_seasonal,
-  start_year = 1900,
-  end_year = 1920,
+  start_year = min(years),
+  end_year = max(years),
+  output_type = "C",
   cores = 10
 )
 
+M <- app(
+  pre_stack,
+  calculate_seasonal,
+  start_year = min(years),
+  end_year = max(years),
+  output_type = "M",
+  cores = 10
+)
+
+sea_r <- C + M
 names(sea_r) <- "pre_seasonal"
 
+dir.create("./data/result", recursive = TRUE, showWarnings = FALSE)
 writeRaster(sea_r, "./data/result/pre_seasonal.tif", overwrite = TRUE)
